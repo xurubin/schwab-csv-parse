@@ -4,6 +4,7 @@ SALE = "Sale"
 DEPOSIT = "Deposit"
 GIFT = "Gift"
 BUY = "Buy"
+JOURNAL = "Journal"
 
 def splitLine(l):
     result = []
@@ -31,7 +32,9 @@ def toType(s):
         return SALE
     if s == "Buy":
         return BUY
-    raise "Unknown type: " + s
+    if s == "Journal":
+        return JOURNAL
+    raise RuntimeError("Unknown type: " + s)
 
 def parseDollar(s):
     if s[0] == '-':
@@ -55,16 +58,21 @@ def main():
     entries = []
     entry = None # [Date, Type, FMV, Amount]
     lc = 0
-    for line in open(sys.argv[1]):
-        line = splitLine(line.strip())
+    for line in sys.stdin:
+        line = line.strip()
+        if not line: break
+        line = splitLine(line)
         if line[0] == "Date" or line[0].startswith("Transaction"):
             continue
-        print line
+        print(line)
         if line[0]:
             if entry:
                 entries.append(entry)
+                entry = None
             date = parseDate(line[0])
             etype = toType(line[1])
+            if etype == JOURNAL:
+                continue
             tick = line[2]
             amount = float(line[4])
             if etype == SALE:
@@ -86,6 +94,6 @@ def main():
         entries.append(entry)
 
     #print entries[0]
-    print '\n'.join(map(recordToLine, entries[::-1]))
+    print('\n'.join(map(recordToLine, entries[::-1])))
 if __name__ == '__main__':
     main()
